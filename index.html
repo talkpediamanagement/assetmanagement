@@ -1,4 +1,3 @@
-<!-- TEST DEPLOY 2026 -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -12,7 +11,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        /* Corporate White & Glassmorphism Theme */
         :root {
             --primary-bg: #f8fafc;
             --glass-bg: rgba(255, 255, 255, 0.85);
@@ -21,85 +19,20 @@
             --text-main: #1e293b;
             --brand-color: #0ea5e9;
         }
-
-        body {
-            background-color: var(--primary-bg);
-            color: var(--text-main);
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            margin: 0;
-            overflow-x: hidden;
-        }
-
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--glass-shadow);
-        }
-
-        /* Sidebar & Layout */
-        #sidebar {
-            width: 260px;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            z-index: 50;
-            transition: transform 0.3s ease;
-        }
-
-        #main-content {
-            margin-left: 260px;
-            min-height: 100vh;
-            padding: 2rem;
-            transition: margin-left 0.3s ease;
-        }
-
-        /* Bottom Nav (Mobile) */
-        #bottom-nav {
-            display: none;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            z-index: 50;
-        }
-
-        .menu-item {
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .menu-item:hover, .menu-item.active {
-            background-color: #e0f2fe;
-            color: var(--brand-color);
-            border-right: 4px solid var(--brand-color);
-        }
-
-        /* Scrollbar */
+        body { background-color: var(--primary-bg); color: var(--text-main); font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; overflow-x: hidden; }
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+        #sidebar { width: 260px; height: 100vh; position: fixed; left: 0; top: 0; z-index: 50; transition: transform 0.3s ease; }
+        #main-content { margin-left: 260px; min-height: 100vh; padding: 2rem; transition: margin-left 0.3s ease; }
+        #bottom-nav { display: none; position: fixed; bottom: 0; width: 100%; z-index: 50; }
+        .menu-item { cursor: pointer; transition: all 0.2s; }
+        .menu-item:hover, .menu-item.active { background-color: #e0f2fe; color: var(--brand-color); border-right: 4px solid var(--brand-color); }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* Responsive Breakpoints */
-        @media (max-width: 768px) {
-            #sidebar { transform: translateX(-100%); }
-            #main-content { margin-left: 0; padding: 1rem; padding-bottom: 80px; }
-            #bottom-nav { display: flex; }
-        }
-
-        /* Loader */
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--brand-color);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-        }
+        @media (max-width: 768px) { #sidebar { transform: translateX(-100%); } #main-content { margin-left: 0; padding: 1rem; padding-bottom: 80px; } #bottom-nav { display: flex; } }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--brand-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-     
-      
     </style>
 </head>
 <body>
@@ -187,8 +120,7 @@
     </div>
 
     <script type="module">
-        // KONFIGURASI APLIKASI
-        const IS_PREVIEW = false; // HARUS FALSE AGAR FIREBASE BERJALAN
+        const IS_PREVIEW = false; 
 
         // PASTE FIREBASE CONFIG ANDA DI SINI
         const firebaseConfig = {
@@ -200,9 +132,10 @@
             appId: "1:790666047574:web:6705564dde0920c5c94bf7"
         };
 
-        // Firebase Imports (Modular SDK)
+        // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        // TAMBAHAN: Import fungsi createUserWithEmailAndPassword untuk pembuatan akun
+        import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         let app, auth, db;
@@ -213,9 +146,8 @@
         }
 
         // ==========================================
-        // STATE MANAGEMENT & MOCK DATABASE
+        // STATE MANAGEMENT
         // ==========================================
-        // MOCK_DB USERS SUDAH DIHAPUS TOTAL UNTUK KEAMANAN
         const AppState = { currentUser: null, currentView: 'dashboard', data: { assets: [], software: [], contracts: [], vendors: [], users: [], loans: [], requests: [] } };
 
         const PROVINCES = [
@@ -228,32 +160,8 @@
             "Papua Barat", "Papua", "Papua Selatan", "Papua Tengah", "Papua Pegunungan", "Nasional"
         ];
 
-        const MOCK_DB = {
-            assets: [
-                { id: 'A001', assetTag: 'AST-LPT-001', sn: 'SN123456', brand: 'Dell', model: 'Latitude 7420', category: 'Laptop', lokasi: 'DKI Jakarta', ownerId: 'U002', status: 'Digunakan', warrantyDate: '2026-01-15' },
-                { id: 'A002', assetTag: 'AST-SRV-001', sn: 'SN987654', brand: 'HP', model: 'ProLiant DL380', category: 'Server', lokasi: 'Sumatera Utara', ownerId: null, status: 'Tersedia', warrantyDate: '2025-05-10' },
-                { id: 'A003', assetTag: 'AST-PRN-001', sn: 'SN112233', brand: 'Epson', model: 'L3150', category: 'Printer', lokasi: 'DKI Jakarta', ownerId: null, status: 'Tersedia', warrantyDate: '2025-02-01' }
-            ],
-            software: [
-                { id: 'S001', name: 'Microsoft Office 365', vendor: 'Microsoft', licenseKey: 'Volume License', totalSeats: 100, activeSeats: 45, expiryDate: '2027-12-31', compliance: 'Compliant' },
-                { id: 'S002', name: 'AutoCAD 2024', vendor: 'Autodesk', licenseKey: 'ABC-123-XYZ', totalSeats: 5, activeSeats: 5, expiryDate: '2025-06-30', compliance: 'Max Capacity' }
-            ],
-            vendors: [
-                { id: 'V001', name: 'Dell Indonesia', pic: 'Budi Santoso', email: 'budi@dell.co.id', phone: '021-5551234', contracts: 'C001' }
-            ],
-            contracts: [
-                { id: 'C001', vendor: 'Dell Indonesia', value: 'Rp 150.000.000', startDate: '2023-01-01', endDate: '2026-01-01', reminder: '2025-12-01' }
-            ],
-            loans: [
-                { id: 'L001', assetTag: 'AST-PRJ-001', itemName: 'Projector Epson', borrower: 'U003', startDate: '2024-10-01', endDate: '2024-10-05', status: 'Selesai' }
-            ],
-            requests: [
-                { id: 'R001', type: 'Permintaan Peminjaman', description: 'Pinjam Laptop Cadangan', userId: 'U003', status: 'Pending', date: '2024-10-25' }
-            ]
-        };
-
         // ==========================================
-        // UTILITY FUNCTIONS (UTUH)
+        // UTILITY FUNCTIONS 
         // ==========================================
         const showToast = (message, type = 'success') => {
             const toast = document.createElement('div');
@@ -302,42 +210,10 @@
         };
 
         // ==========================================
-        // AUTO SETUP DATABASE (TIDAK MENGISI USER)
-        // ==========================================
-        const autoSetupDatabase = async () => {
-            if (IS_PREVIEW) return;
-            try {
-                const assetsRef = collection(db, 'assets');
-                const assetsSnap = await getDocs(query(assetsRef));
-                if (assetsSnap.empty) {
-                    showLoader('Inisialisasi Database Enterprise...');
-                    const collectionsToSetup = ['assets', 'software', 'vendors', 'contracts', 'loans', 'requests'];
-                    for (const collName of collectionsToSetup) {
-                        for (const item of MOCK_DB[collName]) await setDoc(doc(db, collName, item.id), item);
-                    }
-                    showToast("Database Enterprise Siap Digunakan!", "success");
-                }
-            } catch (error) { console.error("Setup Error:", error); } finally { hideLoader(); }
-        };
-
-        // ==========================================
-        // DATA LAYER (UTUH)
+        // DATA LAYER 
         // ==========================================
         const fetchData = async (collectionName) => {
-            if (IS_PREVIEW) {
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        let result = MOCK_DB[collectionName] ? [...MOCK_DB[collectionName]] : [];
-                        if (AppState.currentUser && AppState.currentUser.role === 'Admin Area') {
-                            if (collectionName === 'assets' || collectionName === 'users') {
-                                result = result.filter(item => item.lokasi === AppState.currentUser.area || item.area === AppState.currentUser.area);
-                            }
-                        }
-                        AppState.data[collectionName] = result;
-                        resolve(result);
-                    }, 300);
-                });
-            } else {
+            try {
                 const q = (AppState.currentUser.role === 'Admin Area' && (collectionName === 'assets' || collectionName === 'users')) 
                             ? query(collection(db, collectionName), where(collectionName === 'assets' ? 'lokasi' : 'area', '==', AppState.currentUser.area))
                             : query(collection(db, collectionName));
@@ -345,34 +221,24 @@
                 const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 AppState.data[collectionName] = data;
                 return data;
+            } catch (error) {
+                console.error("Fetch Data Error:", error);
+                return [];
             }
         };
 
         const saveData = async (collectionName, data, id = null) => {
-            if (IS_PREVIEW) {
-                if (!MOCK_DB[collectionName]) MOCK_DB[collectionName] = [];
-                if (id) {
-                    const idx = MOCK_DB[collectionName].findIndex(i => i.id === id);
-                    if(idx > -1) MOCK_DB[collectionName][idx] = { ...data, id };
-                } else {
-                    data.id = 'ID' + Math.floor(Math.random() * 10000);
-                    MOCK_DB[collectionName].push(data);
-                }
-                return true;
-            } else {
-                if (id) await updateDoc(doc(db, collectionName, id), data);
-                else await addDoc(collection(db, collectionName), data);
-                return true;
-            }
+            if (id) await updateDoc(doc(db, collectionName, id), data);
+            else await addDoc(collection(db, collectionName), data);
+            return true;
         };
 
         const deleteData = async (collectionName, id) => {
-            if (IS_PREVIEW) { MOCK_DB[collectionName] = MOCK_DB[collectionName].filter(i => i.id !== id); return true; } 
-            else { await deleteDoc(doc(db, collectionName, id)); return true; }
+            await deleteDoc(doc(db, collectionName, id)); return true;
         };
 
         // ==========================================
-        // AUTHENTICATION LOGIC (SSO ENTERPRISE - PERUBAHAN UTAMA)
+        // AUTHENTICATION LOGIC (SSO ENTERPRISE)
         // ==========================================
         const handleUnifiedLogin = async (e) => {
             e.preventDefault();
@@ -426,7 +292,7 @@
         document.getElementById('btn-logout').addEventListener('click', handleLogout);
 
         // ==========================================
-        // UI & NAVIGATION LOGIC (UTUH)
+        // UI & NAVIGATION LOGIC 
         // ==========================================
         const MENUS = {
             admin: [
@@ -453,8 +319,6 @@
             document.getElementById('auth-role').innerText = `${AppState.currentUser.role} ${AppState.currentUser.area === 'Nasional' ? '' : '- ' + AppState.currentUser.area}`;
             buildNavigation();
             
-            if(!IS_PREVIEW) await autoSetupDatabase();
-
             const defaultView = AppState.currentUser.role === 'User' ? 'user_dashboard' : 'dashboard';
             switchView(defaultView);
         };
@@ -540,9 +404,9 @@
         };
 
         // ==========================================
-        // RENDERERS (VIEWS) (UTUH SAMA SEKALI)
+        // RENDERERS (VIEWS) 
         // ==========================================
-        window.switchView = switchView; // expose global
+        window.switchView = switchView; 
         
         const renderAdminDashboard = async (container) => {
             const assets = await fetchData('assets');
@@ -811,7 +675,7 @@
         };
 
         // ==========================================
-        // MODALS & FORMS (UTUH SAMA SEKALI)
+        // MODALS & FORMS (DENGAN SECONDARY APP LOGIN)
         // ==========================================
         window.openModal = (type, data = null) => {
             const modal = document.getElementById('modal-container');
@@ -904,8 +768,8 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="block text-xs font-medium">NIK / ID Karyawan</label><input type="text" name="nik" value="${data?.nik||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
                         <div><label class="block text-xs font-medium">Nama Lengkap</label><input type="text" name="nama" value="${data?.nama||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
-                        <div><label class="block text-xs font-medium">Email (Khusus Akses Admin)</label><input type="email" name="email" value="${data?.email||''}" class="w-full mt-1 px-3 py-2 border rounded-lg" placeholder="Ketik email login..."></div>
-                        <div><label class="block text-xs font-medium">Password Login</label><input type="text" name="pin" value="${data?.pin||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Email Corporate</label><input type="email" name="email" value="${data?.email||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg" placeholder="nama@company.com" ${data ? 'readonly' : ''}></div>
+                        <div><label class="block text-xs font-medium">Password Baru</label><input type="password" name="pin" value="" ${data ? '' : 'required'} class="w-full mt-1 px-3 py-2 border rounded-lg" placeholder="${data ? 'Kosongkan jika tak diubah' : 'Minimal 6 karakter'}"></div>
                         <div><label class="block text-xs font-medium">Departemen</label><input type="text" name="departemen" value="${data?.departemen||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
                         <div><label class="block text-xs font-medium">Role Akses</label>
                             <select name="role" class="w-full mt-1 px-3 py-2 border rounded-lg">
@@ -923,18 +787,54 @@
             html += `</form>`;
             body.innerHTML = html;
             
+            // LOGIKA PENYIMPANAN TERBARU (DENGAN SECONDARY APP UNTUK USER)
             document.getElementById('modal-submit').onclick = async () => {
                 const form = document.getElementById('dynamic-form');
                 if(!form.checkValidity()) { form.reportValidity(); return; }
                 const formData = new FormData(form);
                 const obj = Object.fromEntries(formData.entries());
                 
-                if(type === 'users' && obj.email) obj.email = obj.email.toLowerCase().trim();
+                showLoader('Menyimpan Data...');
 
-                showLoader('Menyimpan...');
-                await saveData(type, obj, data?.id);
-                hideLoader(); closeModal(); switchView(type);
-                showToast('Data berhasil disimpan');
+                try {
+                    if(type === 'users') {
+                        obj.email = obj.email.toLowerCase().trim();
+                        
+                        if (!data?.id) {
+                            // 1. BUAT AKUN DI AUTH MENGGUNAKAN SECONDARY APP
+                            const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp" + Date.now());
+                            const secondaryAuth = getAuth(secondaryApp);
+                            
+                            const userCred = await createUserWithEmailAndPassword(secondaryAuth, obj.email, obj.pin);
+                            const newUid = userCred.user.uid;
+                            
+                            await signOut(secondaryAuth); // Logout bayangan
+                            
+                            // 2. SIMPAN KE FIRESTORE DENGAN UID AUTH
+                            delete obj.pin; // Jangan simpan password di database!
+                            await setDoc(doc(db, 'users', newUid), obj);
+                            showToast('User berhasil dibuat & didaftarkan!');
+                        } else {
+                            // EDIT USER
+                            delete obj.pin; // Jika password diubah, harus lewat backend. Frontend hanya edit profil.
+                            await saveData(type, obj, data.id);
+                            showToast('Profil user diperbarui');
+                        }
+                    } else {
+                        // SIMPAN ASET/SOFTWARE/DLL SEPERTI BIASA
+                        await saveData(type, obj, data?.id);
+                        showToast('Data berhasil disimpan');
+                    }
+
+                    hideLoader(); closeModal(); switchView(type);
+
+                } catch (error) {
+                    hideLoader();
+                    let msg = error.message;
+                    if (error.code === 'auth/email-already-in-use') msg = 'Email sudah digunakan karyawan lain!';
+                    if (error.code === 'auth/weak-password') msg = 'Password terlalu lemah (min. 6 karakter)!';
+                    showToast('Gagal: ' + msg, 'error');
+                }
             };
         };
 
