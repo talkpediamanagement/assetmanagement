@@ -646,4 +646,433 @@
                             <div class="space-y-3">
                                 ${expSoonAssets.slice(0,4).map(a => `
                                     <div class="flex justify-between items-center bg-white/80 p-2.5 rounded-lg border border-red-100 shadow-sm">
-                                        <div><p class="text-xs font-bold text-gray-800">${a.assetTag}</p
+                                        <div><p class="text-xs font-bold text-gray-800">${a.assetTag}</p><p class="text-[10px] text-gray-500">${a.brand} ${a.model}</p></div>
+                                        <div class="text-right"><span class="text-xs font-bold text-red-600">${a.warrantyDate}</span></div>
+                                    </div>
+                                `).join('') || '<p class="text-xs text-gray-500 text-center py-4">Semua garansi aset aman.</p>'}
+                            </div>
+                            ${expSoonAssets.length > 4 ? `<button onclick="switchView('warranty')" class="w-full mt-4 py-2 bg-white/50 border border-red-200 text-xs text-red-600 font-bold rounded-lg hover:bg-white transition text-center">Lihat ${expSoonAssets.length - 4} lainnya...</button>` : ''}
+                        </div>
+
+                        <div class="glass-panel rounded-xl p-5 shadow-sm bg-white/60">
+                            <h4 class="font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-chart-pie text-sky-500 mr-2"></i>Distribusi Kategori Aset</h4>
+                            <div class="space-y-4">
+                                ${['Laptop', 'PC Desktop', 'Server', 'Printer'].map(cat => {
+                                    const count = assets.filter(a => a.category === cat).length;
+                                    const pct = assets.length === 0 ? 0 : Math.round((count/assets.length)*100);
+                                    return `
+                                    <div>
+                                        <div class="flex justify-between text-xs mb-1.5"><span class="font-medium text-gray-600">${cat}</span><span class="font-bold text-gray-800">${count} Unit (${pct}%)</span></div>
+                                        <div class="w-full bg-gray-200 rounded-full h-1.5"><div class="bg-sky-500 h-1.5 rounded-full" style="width: ${pct}%"></div></div>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            container.innerHTML = html;
+        };
+
+        const renderTable = async (container, collectionName, headers) => {
+            const data = await fetchData(collectionName);
+            let html = `
+                <div class="glass-panel rounded-xl overflow-hidden shadow-sm">
+                    <div class="p-4 border-b border-gray-100 bg-white/50 flex justify-between items-center">
+                        <input type="text" placeholder="Cari data..." class="px-4 py-2 border border-gray-300 rounded-lg text-sm w-64 focus:ring-sky-500 outline-none" onkeyup="filterTable(this)">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left whitespace-nowrap data-table select-none">
+                            <thead class="text-xs text-gray-600 uppercase bg-gray-100/50 border-b">
+                                <tr>
+                                    ${headers.map((h, i) => `<th class="px-6 py-3 font-semibold cursor-pointer hover:bg-gray-200 transition" onclick="sortTableDOM(this, ${i})">${h} <i class="fa-solid fa-sort text-gray-400 ml-1"></i></th>`).join('')}
+                                    <th class="px-6 py-3 font-semibold text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+            if(data.length === 0) {
+                html += `<tr><td colspan="${headers.length + 1}" class="px-6 py-8 text-center text-gray-500">Tidak ada data ditemukan.</td></tr>`;
+            } else {
+                data.forEach(row => {
+                    html += `<tr class="border-b border-gray-50 hover:bg-sky-50/30 transition">`;
+                    if(collectionName === 'assets') {
+                        html += `
+                            <td class="px-6 py-3 font-medium text-sky-700">${row.assetTag}</td>
+                            <td class="px-6 py-3">${row.category}</td>
+                            <td class="px-6 py-3">${row.brand} ${row.model}</td>
+                            <td class="px-6 py-3 text-xs text-gray-500">${row.sn}</td>
+                            <td class="px-6 py-3">${row.lokasi}</td>
+                            <td class="px-6 py-3"><span class="px-2 py-1 rounded text-xs font-medium ${row.status === 'Tersedia' ? 'bg-emerald-100 text-emerald-700' : (row.status === 'Digunakan' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700')}">${row.status}</span></td>`;
+                    } else if (collectionName === 'software') {
+                        html += `
+                            <td class="px-6 py-3 font-medium text-sky-700">${row.name}</td>
+                            <td class="px-6 py-3">${row.vendor}</td>
+                            <td class="px-6 py-3 font-mono text-xs">${row.licenseKey}</td>
+                            <td class="px-6 py-3">${row.activeSeats || 0} / ${row.totalSeats}</td>
+                            <td class="px-6 py-3">${row.expiryDate}</td>
+                            <td class="px-6 py-3"><span class="px-2 py-1 rounded text-xs font-medium ${row.compliance === 'Compliant' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">${row.compliance}</span></td>`;
+                    } else if (collectionName === 'contracts') {
+                        html += `
+                            <td class="px-6 py-3 font-medium text-sky-700">${row.vendor}</td>
+                            <td class="px-6 py-3">${row.value}</td>
+                            <td class="px-6 py-3">${row.startDate}</td>
+                            <td class="px-6 py-3">${row.endDate}</td>
+                            <td class="px-6 py-3 text-orange-600 font-medium">${row.reminder}</td>`;
+                    } else if (collectionName === 'vendors') {
+                        html += `
+                            <td class="px-6 py-3 font-medium text-sky-700">${row.name}</td>
+                            <td class="px-6 py-3">${row.pic}</td>
+                            <td class="px-6 py-3">${row.email}</td>
+                            <td class="px-6 py-3">${row.phone}</td>
+                            <td class="px-6 py-3">${row.contracts}</td>`;
+                    } else if (collectionName === 'loans') {
+                        html += `
+                            <td class="px-6 py-3 font-medium text-sky-700">${row.itemName}<br><span class="text-[10px] text-gray-400 font-normal">${row.assetTag}</span></td>
+                            <td class="px-6 py-3">${row.borrower}</td>
+                            <td class="px-6 py-3">${row.startDate}</td>
+                            <td class="px-6 py-3 text-red-500 font-medium">${row.endDate}</td>
+                            <td class="px-6 py-3"><span class="px-2 py-1 rounded text-xs font-medium ${row.status === 'Selesai' ? 'bg-emerald-100 text-emerald-700' : 'bg-yellow-100 text-yellow-700'}">${row.status}</span></td>`;
+                    } else if (collectionName === 'users') {
+                        html += `
+                            <td class="px-6 py-3 font-medium">${row.nik}</td>
+                            <td class="px-6 py-3">${row.nama}</td>
+                            <td class="px-6 py-3 text-sky-600">${row.email || '-'}</td>
+                            <td class="px-6 py-3"><span class="px-2 py-1 rounded text-xs font-medium bg-gray-200 text-gray-800">${row.role}</span></td>
+                            <td class="px-6 py-3">${row.area}</td>`;
+                    }
+                    html += `
+                        <td class="px-6 py-3 text-right">
+                            <button onclick="editData('${collectionName}', '${row.id}')" class="text-sky-600 hover:text-sky-800 p-1 mx-1 rounded hover:bg-sky-100" title="Edit"><i class="fa-solid fa-edit"></i></button>
+                            <button onclick="deleteRow('${collectionName}', '${row.id}')" class="text-red-500 hover:text-red-700 p-1 mx-1 rounded hover:bg-red-100" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                        </td></tr>`;
+                });
+            }
+            html += `</tbody></table></div></div>`;
+            container.innerHTML = html;
+        };
+
+        const renderWarranty = async (container) => {
+            const assets = await fetchData('assets');
+            const expSoon = assets.filter(a => {
+                if(!a.warrantyDate) return false;
+                const diffDays = Math.ceil((new Date(a.warrantyDate) - new Date()) / (1000 * 60 * 60 * 24)); 
+                return diffDays >= 0 && diffDays <= 90;
+            });
+
+            let html = `
+                <div class="glass-panel rounded-xl p-5 mb-6 border-l-4 border-orange-500">
+                    <h4 class="font-bold text-gray-800 mb-3 text-orange-600"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Garansi Segera Habis (< 90 Hari)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        ${expSoon.length > 0 ? expSoon.map(a => `
+                            <div class="p-3 bg-orange-50 border border-orange-100 rounded-lg flex justify-between items-center">
+                                <div><p class="font-medium text-sm">${a.assetTag}</p><p class="text-xs text-gray-500">${a.brand} ${a.model}</p></div>
+                                <div class="text-right"><p class="text-sm font-bold text-orange-700">${a.warrantyDate}</p></div>
+                            </div>
+                        `).join('') : '<p class="text-sm text-gray-500">Semua garansi aset masih aman atau tidak ada data garansi.</p>'}
+                    </div>
+                </div>`;
+            container.innerHTML = html;
+            
+            const tableDiv = document.createElement('div');
+            tableDiv.className = 'mt-6';
+            container.appendChild(tableDiv);
+            await renderTable(tableDiv, 'assets', ['Asset Tag', 'Tipe', 'Brand/Model', 'SN', 'Lokasi', 'Status']);
+        };
+
+        const renderReports = async (container) => {
+            container.innerHTML = `
+                <div class="glass-panel rounded-xl p-6 text-center max-w-lg mx-auto mt-10">
+                    <i class="fa-solid fa-file-export text-5xl text-sky-500 mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Export Data Laporan</h3>
+                    <div class="space-y-3 mt-6">
+                        <button onclick="exportData('assets', 'excel')" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg flex justify-between"><span><i class="fa-solid fa-file-excel mr-2"></i> Laporan Asset (Excel)</span><i class="fa-solid fa-download"></i></button>
+                        <button onclick="exportData('assets', 'pdf')" class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg flex justify-between"><span><i class="fa-solid fa-file-pdf mr-2"></i> Laporan Asset (PDF)</span><i class="fa-solid fa-download"></i></button>
+                    </div>
+                </div>`;
+        };
+
+        const renderUserDashboard = async (container) => {
+            const assets = await fetchData('assets');
+            const myAssets = assets.filter(a => a.ownerId === AppState.currentUser.id);
+            container.innerHTML = `<div class="glass-panel rounded-xl p-5"><h4 class="font-bold mb-4">Aset Anda</h4>
+                ${myAssets.length > 0 ? myAssets.map(a => `<div class="p-4 border border-gray-200 rounded-lg flex items-start gap-4 bg-white/50 mb-2"><div class="p-3 bg-sky-100 text-sky-600 rounded-lg"><i class="fa-solid fa-laptop text-xl"></i></div><div><h5 class="font-bold text-gray-800">${a.brand} ${a.model}</h5><p class="text-xs text-gray-500">Tag: ${a.assetTag} | SN: ${a.sn}</p></div></div>`).join('') : '<p class="text-sm text-gray-500">Belum ada aset yang ditugaskan kepada Anda.</p>'}</div>`;
+        };
+
+        const renderUserRequests = async (container) => {
+            const reqs = await fetchData('requests');
+            const myReqs = reqs.filter(r => r.userId === AppState.currentUser.id);
+            let html = `
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <button onclick="openRequestForm('Permintaan Baru')" class="p-4 glass-panel rounded-xl hover:bg-sky-50 transition"><i class="fa-solid fa-cart-plus text-2xl text-sky-600 mb-2"></i><p class="text-sm font-medium">Request Aset Baru</p></button>
+                    <button onclick="openRequestForm('Lapor Kerusakan')" class="p-4 glass-panel rounded-xl hover:bg-red-50 transition"><i class="fa-solid fa-wrench text-2xl text-red-600 mb-2"></i><p class="text-sm font-medium">Lapor Kerusakan</p></button>
+                </div>
+                <div class="glass-panel rounded-xl p-5"><h4 class="font-bold text-gray-800 mb-4 border-b pb-2">Riwayat Tiket Anda</h4>
+                <div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="text-xs text-gray-500 uppercase bg-gray-50"><tr><th>Tanggal</th><th>Tipe</th><th>Deskripsi</th><th>Status</th></tr></thead>
+                <tbody>${myReqs.map(r => `<tr class="border-b"><td class="py-3">${r.date||'-'}</td><td class="py-3 font-medium">${r.type}</td><td class="py-3 text-gray-600 max-w-xs truncate">${r.description}</td><td class="py-3"><span class="px-2 py-1 rounded text-xs font-medium bg-gray-200">${r.status}</span></td></tr>`).join('') || '<tr><td colspan="4" class="py-4 text-center text-gray-500">Belum ada riwayat tiket.</td></tr>'}</tbody></table></div></div>`;
+            container.innerHTML = html;
+        };
+
+        // ==========================================
+        // MODALS & FORMS (DENGAN SECONDARY APP LOGIN)
+        // ==========================================
+        window.openModal = (type, data = null) => {
+            const modal = document.getElementById('modal-container');
+            const body = document.getElementById('modal-body');
+            const title = document.getElementById('modal-title');
+            modal.classList.remove('hidden');
+            let html = `<form id="dynamic-form" class="space-y-4">`;
+            
+            if (type === 'assets') {
+                title.innerText = data ? 'Edit Asset' : 'Tambah Asset Baru';
+                html += `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-medium">Asset Tag</label><input type="text" name="assetTag" value="${data?.assetTag||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Serial Number</label><input type="text" name="sn" value="${data?.sn||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Kategori</label>
+                            <select name="category" class="w-full mt-1 px-3 py-2 border rounded-lg">
+                                <option value="Laptop" ${data?.category==='Laptop'?'selected':''}>Laptop</option>
+                                <option value="PC Desktop" ${data?.category==='PC Desktop'?'selected':''}>PC Desktop</option>
+                                <option value="Server" ${data?.category==='Server'?'selected':''}>Server</option>
+                                <option value="Printer" ${data?.category==='Printer'?'selected':''}>Printer</option>
+                            </select></div>
+                        <div><label class="block text-xs font-medium">Brand</label><input type="text" name="brand" value="${data?.brand||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Model</label><input type="text" name="model" value="${data?.model||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Lokasi (Provinsi)</label>
+                            <select name="lokasi" class="w-full mt-1 px-3 py-2 border rounded-lg" ${AppState.currentUser && AppState.currentUser.role === 'Admin Area' ? 'readonly' : ''}>
+                                ${PROVINCES.map(p => `<option value="${p}" ${data?.lokasi === p || (AppState.currentUser && AppState.currentUser.role === 'Admin Area' && AppState.currentUser.area === p) ? 'selected' : ''}>${p}</option>`).join('')}
+                            </select></div>
+                        <div><label class="block text-xs font-medium">Tanggal Garansi</label><input type="date" name="warrantyDate" value="${data?.warrantyDate||''}" class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Status</label>
+                            <select name="status" class="w-full mt-1 px-3 py-2 border rounded-lg">
+                                <option value="Tersedia" ${data?.status==='Tersedia'?'selected':''}>Tersedia</option>
+                                <option value="Digunakan" ${data?.status==='Digunakan'?'selected':''}>Digunakan</option>
+                                <option value="Maintenance" ${data?.status==='Maintenance'?'selected':''}>Maintenance</option>
+                            </select></div>
+                    </div>`;
+            } else if (type === 'software') {
+                title.innerText = data ? 'Edit Lisensi Software' : 'Tambah Lisensi Software';
+                html += `
+                    <div><label class="block text-xs font-medium">Nama Software</label><input type="text" name="name" value="${data?.name||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    <div><label class="block text-xs font-medium">Vendor</label><input type="text" name="vendor" value="${data?.vendor||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    <div><label class="block text-xs font-medium">License Key</label><input type="text" name="licenseKey" value="${data?.licenseKey||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-medium">Total Seats</label><input type="number" name="totalSeats" value="${data?.totalSeats||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Expired Date</label><input type="date" name="expiryDate" value="${data?.expiryDate||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    </div>
+                    <div><label class="block text-xs font-medium">Compliance</label>
+                        <select name="compliance" class="w-full mt-1 px-3 py-2 border rounded-lg">
+                            <option value="Compliant" ${data?.compliance==='Compliant'?'selected':''}>Compliant</option>
+                            <option value="Max Capacity" ${data?.compliance==='Max Capacity'?'selected':''}>Max Capacity</option>
+                            <option value="Expired" ${data?.compliance==='Expired'?'selected':''}>Expired</option>
+                        </select></div>`;
+            } else if (type === 'contracts') {
+                title.innerText = data ? 'Edit Kontrak' : 'Tambah Kontrak Vendor';
+                html += `
+                    <div><label class="block text-xs font-medium">Vendor / Provider</label><input type="text" name="vendor" value="${data?.vendor||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    <div><label class="block text-xs font-medium">Nilai Kontrak</label><input type="text" name="value" value="${data?.value||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg" placeholder="Contoh: Rp 50.000.000"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-medium">Start Date</label><input type="date" name="startDate" value="${data?.startDate||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">End Date</label><input type="date" name="endDate" value="${data?.endDate||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    </div>
+                    <div><label class="block text-xs font-medium">Tanggal Reminder</label><input type="date" name="reminder" value="${data?.reminder||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>`;
+            } else if (type === 'vendors') {
+                title.innerText = data ? 'Edit Vendor' : 'Tambah Vendor Baru';
+                html += `
+                    <div><label class="block text-xs font-medium">Nama Vendor</label><input type="text" name="name" value="${data?.name||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    <div><label class="block text-xs font-medium">PIC (Person In Charge)</label><input type="text" name="pic" value="${data?.pic||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-medium">Email</label><input type="email" name="email" value="${data?.email||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Telepon</label><input type="text" name="phone" value="${data?.phone||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    </div>
+                    <div><label class="block text-xs font-medium">ID Kontrak (Opsional)</label><input type="text" name="contracts" value="${data?.contracts||''}" class="w-full mt-1 px-3 py-2 border rounded-lg"></div>`;
+            } else if (type === 'loans') {
+                title.innerText = data ? 'Edit Peminjaman' : 'Form Peminjaman Aset';
+                html += `
+                    <div><label class="block text-xs font-medium">Asset Tag</label><input type="text" name="assetTag" value="${data?.assetTag||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    <div><label class="block text-xs font-medium">Nama Barang</label><input type="text" name="itemName" value="${data?.itemName||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    <div><label class="block text-xs font-medium">ID Peminjam (NIK)</label><input type="text" name="borrower" value="${data?.borrower||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-medium">Tanggal Pinjam</label><input type="date" name="startDate" value="${data?.startDate||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Batas Kembali</label><input type="date" name="endDate" value="${data?.endDate||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                    </div>
+                    <div><label class="block text-xs font-medium">Status</label>
+                        <select name="status" class="w-full mt-1 px-3 py-2 border rounded-lg">
+                            <option value="Aktif" ${data?.status==='Aktif'?'selected':''}>Aktif</option>
+                            <option value="Selesai" ${data?.status==='Selesai'?'selected':''}>Selesai</option>
+                        </select></div>`;
+            } else if (type === 'users') {
+                title.innerText = data ? 'Edit Data Pengguna' : 'Tambah Pengguna Baru';
+                html += `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-medium">NIK / ID Karyawan</label><input type="text" name="nik" value="${data?.nik||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Nama Lengkap</label><input type="text" name="nama" value="${data?.nama||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Email Corporate</label><input type="email" name="email" value="${data?.email||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg" placeholder="nama@company.com" ${data ? 'readonly' : ''}></div>
+                        <div><label class="block text-xs font-medium">Password Baru</label><input type="password" name="pin" value="" ${data ? '' : 'required'} class="w-full mt-1 px-3 py-2 border rounded-lg" placeholder="${data ? 'Kosongkan jika tak diubah' : 'Minimal 6 karakter'}"></div>
+                        <div><label class="block text-xs font-medium">Departemen</label><input type="text" name="departemen" value="${data?.departemen||''}" required class="w-full mt-1 px-3 py-2 border rounded-lg"></div>
+                        <div><label class="block text-xs font-medium">Role Akses</label>
+                            <select name="role" class="w-full mt-1 px-3 py-2 border rounded-lg">
+                                <option value="User" ${data?.role==='User'?'selected':''}>User (Staff Biasa)</option>
+                                <option value="Admin Area" ${data?.role==='Admin Area'?'selected':''}>Admin Area</option>
+                                <option value="SuperAdmin" ${data?.role==='SuperAdmin'?'selected':''}>SuperAdmin</option>
+                            </select></div>
+                        <div class="col-span-2"><label class="block text-xs font-medium">Lokasi/Cakupan (Provinsi / Nasional)</label>
+                            <select name="area" class="w-full mt-1 px-3 py-2 border rounded-lg">
+                                ${PROVINCES.map(p => `<option value="${p}" ${data?.area === p ? 'selected' : ''}>${p}</option>`).join('')}
+                            </select></div>
+                    </div>`;
+            }
+
+            html += `</form>`;
+            body.innerHTML = html;
+            
+            // LOGIKA PENYIMPANAN
+            document.getElementById('modal-submit').onclick = async () => {
+                const form = document.getElementById('dynamic-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const formData = new FormData(form);
+                const obj = Object.fromEntries(formData.entries());
+                
+                showLoader('Menyimpan Data...');
+
+                try {
+                    if(type === 'users') {
+                        obj.email = obj.email.toLowerCase().trim();
+                        
+                        if (!data?.id) {
+                            // 1. BUAT AKUN DI AUTH MENGGUNAKAN SECONDARY APP
+                            const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp" + Date.now());
+                            const secondaryAuth = getAuth(secondaryApp);
+                            
+                            const userCred = await createUserWithEmailAndPassword(secondaryAuth, obj.email, obj.pin);
+                            const newUid = userCred.user.uid;
+                            
+                            await signOut(secondaryAuth); // Logout bayangan
+                            
+                            // 2. SIMPAN KE FIRESTORE DENGAN UID AUTH
+                            delete obj.pin; // Jangan simpan password di database
+                            await setDoc(doc(db, 'users', newUid), obj);
+                            showToast('User berhasil dibuat & didaftarkan!');
+                        } else {
+                            // EDIT USER
+                            delete obj.pin; 
+                            await saveData(type, obj, data.id);
+                            showToast('Profil user diperbarui');
+                        }
+                    } else {
+                        // SIMPAN ASET/SOFTWARE/DLL SEPERTI BIASA
+                        await saveData(type, obj, data?.id);
+                        showToast('Data berhasil disimpan');
+                    }
+
+                    hideLoader(); closeModal(); switchView(type);
+
+                } catch (error) {
+                    hideLoader();
+                    let msg = error.message;
+                    if (error.code === 'auth/email-already-in-use') msg = 'Email sudah digunakan karyawan lain!';
+                    if (error.code === 'auth/weak-password') msg = 'Password terlalu lemah (min. 6 karakter)!';
+                    showToast('Gagal: ' + msg, 'error');
+                }
+            };
+        };
+
+        window.openRequestForm = (reqType) => {
+            openModal('requests_fake'); // Open modal visual shell
+            document.getElementById('modal-title').innerText = 'Form ' + reqType;
+            document.getElementById('modal-body').innerHTML = `
+                <form id="dynamic-form" class="space-y-4">
+                    <div><label class="block text-sm font-medium">Tipe Request</label><input type="text" name="type" value="${reqType}" readonly class="w-full mt-1 px-3 py-2 border bg-gray-50 rounded-lg"></div>
+                    <div><label class="block text-sm font-medium">Deskripsi Lengkap / Alasan</label><textarea name="description" rows="4" required class="w-full mt-1 px-3 py-2 border rounded-lg" placeholder="Jelaskan detail..."></textarea></div>
+                </form>
+            `;
+            document.getElementById('modal-submit').onclick = async () => {
+                const form = document.getElementById('dynamic-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const obj = Object.fromEntries(new FormData(form).entries());
+                obj.userId = AppState.currentUser.id; obj.status = 'Pending'; obj.date = new Date().toISOString().split('T')[0];
+                showLoader(); await saveData('requests', obj); hideLoader(); closeModal(); switchView('user_requests'); showToast('Permintaan dikirim!');
+            };
+        };
+
+        const closeModal = () => document.getElementById('modal-container').classList.add('hidden');
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        document.getElementById('modal-cancel').addEventListener('click', closeModal);
+
+        window.deleteRow = async (collectionName, id) => {
+            if(confirm('Yakin menghapus data ini?')) { showLoader(); await deleteData(collectionName, id); hideLoader(); switchView(collectionName); showToast('Data dihapus'); }
+        };
+        window.editData = async (collectionName, id) => {
+            const item = AppState.data[collectionName].find(i => i.id === id);
+            if(item) openModal(collectionName, item);
+        };
+        window.filterTable = (input) => {
+            const filter = input.value.toLowerCase();
+            document.querySelectorAll('.data-table tbody tr').forEach(row => { row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none'; });
+        };
+        
+        window.exportData = async (collectionName, format) => {
+            const data = await fetchData(collectionName);
+            if(data.length === 0) return showToast('Tidak ada data', 'error');
+            if(format === 'excel') {
+                const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Report"); XLSX.writeFile(wb, `${collectionName}_report.xlsx`);
+            } else if (format === 'pdf') {
+                const doc = new jspdf.jsPDF(); const headers = Object.keys(data[0]).filter(k => k !== 'id'); const rows = data.map(obj => headers.map(h => obj[h] || '-'));
+                doc.text(`Laporan ${collectionName.toUpperCase()}`, 14, 15); doc.autoTable({ startY: 20, head: [headers], body: rows, styles: { fontSize: 8 }}); doc.save(`${collectionName}_report.pdf`);
+            }
+            showToast('Laporan diunduh');
+        };
+
+        const setupPWA = () => {
+            const manifestData = { name: "Enterprise Asset System", short_name: "EAS", display: "standalone", background_color: "#ffffff", theme_color: "#0ea5e9", icons: [{ src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iIzBlYTVlOSIvPjwvc3ZnPg==", sizes: "192x192", type: "image/svg+xml" }]};
+            const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+            document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blob)}">`);
+            const swCode = `self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('activate', (e) => self.clients.claim()); self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request).catch(() => caches.match(e.request))); });`;
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' }))).catch(()=>{});
+        };
+
+        setupPWA();
+
+        // ==========================================
+        // SISTEM PENJAGA SESI (PERSISTENT AUTH)
+        // ==========================================
+        showLoader('Memeriksa Sesi...');
+        
+        onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                // Jika browser punya token login valid, cek profil di Firestore
+                try {
+                    const userDocRef = doc(db, 'users', firebaseUser.uid);
+                    const userDocSnap = await getDoc(userDocRef);
+
+                    if (userDocSnap.exists()) {
+                        const userData = userDocSnap.data();
+                        AppState.currentUser = {
+                            id: firebaseUser.uid,
+                            email: firebaseUser.email,
+                            nama: userData.nama,
+                            role: userData.role,
+                            area: userData.area
+                        };
+                        initApp(); // Langsung masuk tanpa login manual
+                    } else {
+                        // UID ada tapi dokumen profil terhapus
+                        await signOut(auth);
+                        document.getElementById('login-screen').classList.remove('hidden');
+                        hideLoader();
+                    }
+                } catch (error) {
+                    console.error("Gagal verifikasi profil:", error);
+                    await signOut(auth);
+                    document.getElementById('login-screen').classList.remove('hidden');
+                    hideLoader();
+                }
+            } else {
+                // Jika belum login atau token sudah kedaluwarsa
+                document.getElementById('app-structure').classList.add('hidden');
+                document.getElementById('login-screen').classList.remove('hidden');
+                hideLoader();
+            }
+        });
+
+    </script>
+</body>
+</html>
